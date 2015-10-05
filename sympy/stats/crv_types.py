@@ -41,15 +41,14 @@ WignerSemicircle
 
 from __future__ import print_function, division
 
-from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
+from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Symbol, log, besseli, Lambda, Basic)
+                   Lambda, Basic)
 from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
-from sympy.core.decorators import _sympifyit
 import random
 
 oo = S.Infinity
@@ -751,11 +750,13 @@ def Erlang(name, k, l):
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
-    /  k*lowergamma(k, 0)   k*lowergamma(k, l*z)
-    |- ------------------ + --------------------  for z >= 0
-    <     gamma(k + 1)          gamma(k + 1)
+    /     -2*I*pi*k                       -2*I*pi*k
+    |  k*e         *lowergamma(k, 0)   k*e         *lowergamma(k, l*z)
+    |- ----------------------------- + -------------------------------  for z >= 0
+    <           gamma(k + 1)                     gamma(k + 1)
     |
-    \                     0                       otherwise
+    |                                0                                  otherwise
+    \
 
     >>> simplify(E(X))
     k/l

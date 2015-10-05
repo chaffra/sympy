@@ -1,7 +1,5 @@
 """Tests that the IPython printing module is properly loaded. """
 
-import warnings
-
 from sympy.core.compatibility import u
 from sympy.interactive.session import init_ipython_session
 from sympy.external import import_module
@@ -127,3 +125,7 @@ def test_matplotlib_bad_latex():
 
     # This should not raise an exception
     app.run_cell("a = format(Matrix([1, 2, 3]))")
+
+    # issue 9799
+    app.run_cell("from sympy import Piecewise, Symbol, Eq")
+    app.run_cell("x = Symbol('x'); pw = format(Piecewise((1, Eq(x, 0)), (0, True)))")

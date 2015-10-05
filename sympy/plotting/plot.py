@@ -25,12 +25,12 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 from __future__ import print_function, division
 
 from inspect import getargspec
-from itertools import chain
 from collections import Callable
 import warnings
 
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
+from sympy.core.compatibility import range
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
@@ -1086,8 +1086,12 @@ def centers_of_faces(array):
 def flat(x, y, z, eps=1e-3):
     """Checks whether three points are almost collinear"""
     np = import_module('numpy')
-    vector_a = x - y
-    vector_b = z - y
+    # Workaround plotting piecewise (#8577):
+    #   workaround for `lambdify` in `.experimental_lambdify` fails
+    #   to return numerical values in some cases. Lower-level fix
+    #   in `lambdify` is possible.
+    vector_a = (x - y).astype(np.float)
+    vector_b = (z - y).astype(np.float)
     dot_product = np.dot(vector_a, vector_b)
     vector_a_norm = np.linalg.norm(vector_a)
     vector_b_norm = np.linalg.norm(vector_b)

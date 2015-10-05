@@ -3,7 +3,7 @@ from __future__ import division
 
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
     Dummy, Eq, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
-    Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin, sinh, cosh,
+    Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
     classify_ode, classify_sysode, constant_renumber, constantsimp,
@@ -81,6 +81,74 @@ def test_linear_2eq_order1():
     assert dsolve(eq10) == sol10
 
 
+def test_linear_2eq_order1_nonhomog_linear():
+    e = [Eq(diff(f(x), x), f(x) + g(x) + 5*x),
+         Eq(diff(g(x), x), f(x) - g(x))]
+    raises(NotImplementedError, lambda: dsolve(e))
+
+
+def test_linear_2eq_order1_nonhomog():
+    # Note: once implemented, add some tests esp. with resonance
+    e = [Eq(diff(f(x), x), f(x) + exp(x)),
+         Eq(diff(g(x), x), f(x) + g(x) + x*exp(x))]
+    raises(NotImplementedError, lambda: dsolve(e))
+
+
+def test_linear_2eq_order1_type2_degen():
+    e = [Eq(diff(f(x), x), f(x) + 5),
+         Eq(diff(g(x), x), f(x) + 7)]
+    s1 = [Eq(f(x), C2*exp(x) - 5), Eq(g(x), C2*exp(x) - C1 + 2*x - 5)]
+    s = dsolve(e)
+    assert s == s1
+    s = [(l.lhs, l.rhs) for l in s]
+    assert e[0].subs(s).doit()
+    assert e[1].subs(s).doit()
+
+
+def test_dsolve_linear_2eq_order1_diag_triangular():
+    e = [Eq(diff(f(x), x), f(x)),
+         Eq(diff(g(x), x), g(x))]
+    s1 = [Eq(f(x), C2*exp(x)), Eq(g(x), C1*exp(x))]
+    s = dsolve(e)
+    assert s == s1
+    s = [(l.lhs, l.rhs) for l in s]
+    assert e[0].subs(s).doit()
+    assert e[1].subs(s).doit()
+
+    e = [Eq(diff(f(x), x), 2*f(x)),
+         Eq(diff(g(x), x), 3*f(x) + 7*g(x))]
+    s1 = [Eq(f(x), -5*C1*exp(2*x)),
+          Eq(g(x), 3*C1*exp(2*x) + 8*C2*exp(7*x))];
+    s = dsolve(e)
+    assert s == s1
+    s = [(l.lhs, l.rhs) for l in s]
+    assert e[0].subs(s).doit()
+    assert e[1].subs(s).doit()
+
+
+@XFAIL
+def test_sysode_linear_2eq_order1_type1_D_lt_0():
+    e = [Eq(diff(f(x), x), -9*I*f(x) - 4*g(x)),
+         Eq(diff(g(x), x), -4*I*g(x))]
+    s = dsolve(e)
+    s = [(l.lhs, l.rhs) for l in s]
+    # bit of a hassle to get these to clean up
+    assert (e[0].lhs - e[0].rhs).subs(s).doit().simplify().doit() == 0
+    assert (e[1].lhs - e[1].rhs).subs(s).doit().simplify().doit() == 0
+
+
+@XFAIL
+def test_sysode_linear_2eq_order1_type1_D_lt_0_b_eq_0():
+    e = [Eq(diff(f(x), x), -9*I*f(x)),
+         Eq(diff(g(x), x), -4*I*g(x))]
+    s1 = [Eq(f(x), C1*exp(-9*I*x)), Eq(g(x), C2*exp(-4*I*x))]
+    s = dsolve(e)
+    assert s == s1
+    s = [(l.lhs, l.rhs) for l in s]
+    assert e[0].subs(s).doit()
+    assert e[1].subs(s).doit()
+
+
 def test_linear_2eq_order2():
     x, y, z = symbols('x, y, z', function=True)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
@@ -141,13 +209,13 @@ def test_linear_2eq_order2():
     assert dsolve(eq7) == sol7
 
     eq8 = (Eq(diff(x(t),t,t), t*(4*x(t) + 9*y(t))), Eq(diff(y(t),t,t), t*(12*x(t) - 6*y(t))))
-    sol8 = ("[x(t) == -sqrt(133)*((-sqrt(133) - 1)*(C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) + "
+    sol8 = ("[Eq(x(t), -sqrt(133)*((-sqrt(133) - 1)*(C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) + "
     "C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + O(t**6)) - (-1 + sqrt(133))*(C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) + "
     "C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6)) - 4*C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) + "
     "4*C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) - 4*C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + "
-    "4*C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/3192, y(t) == -sqrt(133)*(-C2*(133*t**8/24 - t**3/6 + "
+    "4*C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/3192), Eq(y(t), -sqrt(133)*(-C2*(133*t**8/24 - t**3/6 + "
     "sqrt(133)*t**3/2 + 1) + C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) - C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + "
-    "C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/266]")
+    "C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/266)]")
     assert str(dsolve(eq8)) == sol8
 
     eq9 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
@@ -269,6 +337,24 @@ def test_linear_3eq_order1():
     assert dsolve(eq6) == sol6
 
 
+def test_linear_3eq_order1_nonhomog():
+    e = [Eq(diff(f(x), x), -9*f(x) - 4*g(x)),
+         Eq(diff(g(x), x), -4*g(x)),
+         Eq(diff(h(x), x), h(x) + exp(x))]
+    raises(NotImplementedError, lambda: dsolve(e))
+
+
+@XFAIL
+def test_linear_3eq_order1_diagonal():
+    # code makes assumptions about coefficients being nonzero, breaks when assumptions are not true
+    e = [Eq(diff(f(x), x), f(x)),
+         Eq(diff(g(x), x), g(x)),
+         Eq(diff(h(x), x), h(x))]
+    s1 = [Eq(f(x), C1*exp(x)), Eq(g(x), C2*exp(x)), Eq(h(x), C3*exp(x))]
+    s = dsolve(e)
+    assert s == s1
+
+
 def test_nonlinear_2eq_order1():
     x, y, z = symbols('x, y, z', function=True)
     t = Symbol('t')
@@ -299,10 +385,8 @@ def test_nonlinear_2eq_order1():
     eq3 = (Eq(diff(x(t),t), y(t)*x(t)), Eq(diff(y(t),t), x(t)**3))
     tt = S(2)/3
     sol3 = [
-        Eq(x(t), 6**tt/(6*(sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**tt)),
-        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3),
-        Eq(x(t), 6**tt/(6*(-sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**tt)),
-        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3)]
+        Eq(x(t), 6**tt/(6*(-sinh(sqrt(C1)*(C2 + t)/2)/sqrt(C1))**tt)),
+        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1)*(C2 + t)/2)**2)/3)]
     assert dsolve(eq3) == sol3
 
     eq4 = (Eq(diff(x(t),t),x(t)*y(t)*sin(t)**2), Eq(diff(y(t),t),y(t)**2*sin(t)**2))
@@ -455,21 +539,22 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
 
+@slow
 def test_nonlinear_3eq_order1():
     x, y, z = symbols('x, y, z', function=True)
     t = Symbol('t')
     eq1 = (4*diff(x(t),t) + 2*y(t)*z(t), 3*diff(y(t),t) - z(t)*x(t), 5*diff(z(t),t) - x(t)*y(t))
-    sol1 = "[x(t) == (Integral(4/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 + 5*C1 - C2)), (_y, x(t))) == "\
-    "C3 + Integral(-sqrt(15)/15, t)), y(t) == (Integral(3/(sqrt(-6*_y**2 - C1 + 5*C2)*sqrt(3*_y**2 + C1 - 4*C2)), "\
-    "(_y, y(t))) == C3 + Integral(sqrt(5)/10, t)), z(t) == (Integral(5/(sqrt(-10*_y**2 - 3*C1 + C2)*sqrt(5*_y**2 + "\
-    "4*C1 - C2)), (_y, z(t))) == C3 + Integral(sqrt(3)/6, t))]"
+    sol1 = "[Eq(x(t), Eq(Integral(4/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 + 5*C1 - C2)), (_y, x(t))), "\
+    "C3 + Integral(-sqrt(15)/15, t))), Eq(y(t), Eq(Integral(3/(sqrt(-6*_y**2 - C1 + 5*C2)*sqrt(3*_y**2 + C1 - 4*C2)), "\
+    "(_y, y(t))), C3 + Integral(sqrt(5)/10, t))), Eq(z(t), Eq(Integral(5/(sqrt(-10*_y**2 - 3*C1 + C2)*"\
+    "sqrt(5*_y**2 + 4*C1 - C2)), (_y, z(t))), C3 + Integral(sqrt(3)/6, t)))]"
     assert str(dsolve(eq1)) == sol1
 
     eq2 = (4*diff(x(t),t) + 2*y(t)*z(t)*sin(t), 3*diff(y(t),t) - z(t)*x(t)*sin(t), 5*diff(z(t),t) - x(t)*y(t)*sin(t))
-    sol2 = "[x(t) == (Integral(3/(sqrt(-6*_y**2 - C1 + 5*C2)*sqrt(3*_y**2 + C1 - 4*C2)), (_y, x(t))) == "\
-    "C3 + Integral(-sqrt(5)*sin(t)/10, t)), y(t) == (Integral(4/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 "\
-    "+ 5*C1 - C2)), (_y, y(t))) == C3 + Integral(sqrt(15)*sin(t)/15, t)), z(t) == (Integral(5/(sqrt(-10*_y**2 - "\
-    "3*C1 + C2)*sqrt(5*_y**2 + 4*C1 - C2)), (_y, z(t))) == C3 + Integral(-sqrt(3)*sin(t)/6, t))]"
+    sol2 = "[Eq(x(t), Eq(Integral(3/(sqrt(-6*_y**2 - C1 + 5*C2)*sqrt(3*_y**2 + C1 - 4*C2)), (_y, x(t))), C3 + "\
+    "Integral(-sqrt(5)*sin(t)/10, t))), Eq(y(t), Eq(Integral(4/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 + 5*C1 - C2)), "\
+    "(_y, y(t))), C3 + Integral(sqrt(15)*sin(t)/15, t))), Eq(z(t), Eq(Integral(5/(sqrt(-10*_y**2 - 3*C1 + C2)*"\
+    "sqrt(5*_y**2 + 4*C1 - C2)), (_y, z(t))), C3 + Integral(-sqrt(3)*sin(t)/6, t)))]"
     assert str(dsolve(eq2)) == sol2
 
 
@@ -513,6 +598,7 @@ def test_checkodesol():
     assert not checkodesol(eq3, sol3)[1].has(f(x))
 
 
+@slow
 def test_dsolve_options():
     eq = x*f(x).diff(x) + f(x)
     a = dsolve(eq, hint='all')
@@ -877,6 +963,7 @@ def test_old_ode_tests():
     assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
 
 
+@slow
 def test_1st_linear():
     # Type: first order linear form f'(x)+p(x)f(x)=q(x)
     eq = Eq(f(x).diff(x) + x*f(x), x**2)
@@ -970,8 +1057,6 @@ def test_separable1():
     sol3 = Eq(f(x), C1 + cos(x))
     sol4 = Eq(atan(f(x)), C1 + atan(x))
     sol5 = Eq(f(x), -2 + C1*sqrt(1 + tan(x)**2))
-    #sol5 = Eq(f(x), C1*(C2 + sqrt(1 + tan(x)**2)))
-    #sol5 = Eq(-log(2 + f(x)), C1 - log(1 + tan(x)**2)/2)
     assert dsolve(eq1, hint='separable') == sol1
     assert dsolve(eq2, hint='separable') == sol2
     assert dsolve(eq3, hint='separable') == sol3
@@ -994,13 +1079,13 @@ def test_separable2():
             a**2*sin(f(x))*f(x).diff(x))
     # solve() messes this one up a little bit, so lets test _Integral here
     # We have to test strings with _Integral because y is a dummy variable.
-    sol6str = ("Integral((_y - 2)/_y**3, (_y, f(x))) "
-               "== C1 + Integral(x**(-2), x)")
+    sol6str = ("Eq(Integral((_y - 2)/_y**3, (_y, f(x))), "
+               "C1 + Integral(x**(-2), x))")
     sol7 = Eq(-log(-1 + f(x)**2)/2, C1 - log(2 + x))
     sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
     # integrate cannot handle the integral on the lhs (cos/tan)
-    sol9str = ("Integral(cos(_y)/tan(_y), (_y, f(x)))"
-               " == C1 + Integral(-E*exp(x), x)")
+    sol9str = ("Eq(Integral(cos(_y)/tan(_y), (_y, f(x))), "
+                "C1 + Integral(-E*exp(x), x))")
     sol10 = Eq(-log(-1 + sin(f(x))**2)/2, C1 - log(x**2 - a**2)/2)
     assert str(dsolve(eq6, hint='separable_Integral')) == sol6str
     assert dsolve(eq7, hint='separable', simplify=False) == sol7
@@ -1104,6 +1189,7 @@ def test_homogeneous_order():
     raises(ValueError, lambda: homogeneous_order(x*y))
 
 
+@slow
 def test_1st_homogeneous_coeff_ode():
     # Type: First order homogeneous, y'=f(y/x)
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
@@ -1251,6 +1337,7 @@ def test_1st_homogeneous_coeff_corner_case():
     assert sid not in c2 and sdi not in c2
 
 
+@slow
 def test_nth_linear_constant_coeff_homogeneous():
     # From Exercise 20, in Ordinary Differential Equations,
     #                      Tenenbaum and Pollard, pg. 220
@@ -1306,8 +1393,7 @@ def test_nth_linear_constant_coeff_homogeneous():
         C4*exp(-x*sqrt(a)))
     sol11 = Eq(f(x),
         C1*exp(x*(k - sqrt(k**2 + 2))) + C2*exp(x*(k + sqrt(k**2 + 2))))
-    sol12 = Eq(f(x),
-        C1*exp(2*x*(-2*abs(k) - k)) + C2*exp(2*x*(2*abs(k) - k)))
+    sol12 = Eq(f(x), C1*exp(-6*k*x) + C2*exp(2*k*x))
     sol13 = Eq(f(x), C1 + C2*x + C3*x**2 + C4*x**3)
     sol14 = Eq(f(x), (C1 + C2*x)*exp(-2*x))
     sol15 = Eq(f(x), (C1 + C2*x)*exp(-x) + C3*exp(x/3))
@@ -1433,6 +1519,7 @@ def test_nth_linear_constant_coeff_homogeneous_RootOf():
 
 
 @XFAIL
+@slow
 def test_nth_linear_constant_coeff_homogeneous_RootOf_sol():
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
     sol = Eq(f(x),
@@ -1573,6 +1660,7 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(2**(x**2), x) == {'test': False}
 
 
+@slow
 def test_nth_linear_constant_coeff_undetermined_coefficients():
     hint = 'nth_linear_constant_coeff_undetermined_coefficients'
     g = exp(-x)
@@ -1754,6 +1842,7 @@ def test_nth_linear_constant_coeff_undetermined_coefficients_imaginary_exp():
     assert checkodesol(eq26a, sol26, order=5, solve_for_func=False)[0]
 
 
+@slow
 def test_nth_linear_constant_coeff_variation_of_parameters():
     hint = 'nth_linear_constant_coeff_variation_of_parameters'
     g = exp(-x)
@@ -1822,6 +1911,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     assert checkodesol(eq12, sol12, order=4, solve_for_func=False)[0]
 
 
+@slow
 def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     # solve_variation_of_parameters shouldn't attempt to simplify the
     # Wronskian if simplify=False.  If wronskian() ever gets good enough
@@ -2150,10 +2240,10 @@ def test_exact_enhancement():
     eq = (x + 2)*sin(f) + df*x*cos(f)
     rhs = [sol.rhs for sol in dsolve(eq, f)]
     assert rhs == [
-        -acos(-sqrt(C1*exp(-2*x) + x**4)/x**2) + 2*pi,
-        -acos(sqrt(C1*exp(-2*x) + x**4)/x**2) + 2*pi,
-        acos(-sqrt(C1*exp(-2*x) + x**4)/x**2),
-        acos(sqrt(C1*exp(-2*x) + x**4)/x**2)]
+        -acos(-sqrt(C1*exp(-2*x)/x**4 + 1)) + 2*pi,
+        -acos(sqrt(C1*exp(-2*x)/x**4 + 1)) + 2*pi,
+        acos(-sqrt(C1*exp(-2*x)/x**4 + 1)),
+        acos(sqrt(C1*exp(-2*x)/x**4 + 1))]
 
 
 def test_separable_reduced():
@@ -2332,6 +2422,7 @@ def test_heuristic2():
     assert checkinfsol(eq, i)[0]
 
 
+@slow
 def test_heuristic3():
     y = Symbol('y')
     xi = Function('xi')
@@ -2438,6 +2529,7 @@ def test_series():
     assert dsolve(eq, hint='1st_power_series', ics={f(2): 2}, n=3) == sol
 
 
+@slow
 def test_lie_group():
     C1 = Symbol("C1")
     x = Symbol("x") # assuming x is real generates an error!
@@ -2557,3 +2649,11 @@ def test_issue_7093():
     sol = Eq(f(x), C1 - 2*x*sqrt(x**3)/5)
     eq = Derivative(f(x), x)**2 - x**3
     assert dsolve(eq) == sol and checkodesol(eq, sol) == (True, 0)
+
+
+def test_dsolve_linsystem_symbol():
+    eps = Symbol('epsilon', positive=True)
+    eq1 = (Eq(diff(f(x), x), -eps*g(x)), Eq(diff(g(x), x), eps*f(x)))
+    sol1 = [Eq(f(x), -eps*(C1*sin(eps*x) + C2*cos(eps*x))),
+            Eq(g(x), C1*eps*cos(eps*x) - C2*eps*sin(eps*x))]
+    assert dsolve(eq1) == sol1

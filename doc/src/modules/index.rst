@@ -34,7 +34,7 @@ access any SymPy module, or use this contens:
    plotting.rst
    assumptions/index.rst
    rewriting.rst
-   series.rst
+   series/index.rst
    sets.rst
    simplify/simplify.rst
    simplify/hyperexpand.rst
@@ -44,6 +44,7 @@ access any SymPy module, or use this contens:
    solvers/solvers.rst
    solvers/diophantine.rst
    solvers/inequalities.rst
+   solvers/solveset.rst
    tensor/index.rst
    utilities/index.rst
    parsing.rst
@@ -51,6 +52,7 @@ access any SymPy module, or use this contens:
    physics/index.rst
    categories.rst
    diffgeom.rst
+   vector/index.rst
 
 Contributions to docs
 ---------------------
