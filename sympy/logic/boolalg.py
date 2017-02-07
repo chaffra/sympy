@@ -9,9 +9,8 @@ from itertools import combinations, product
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.numbers import Number
-from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
-from sympy.core.function import Application
+from sympy.core.function import Application, Derivative
 from sympy.core.compatibility import ordered, range, with_metaclass, as_int
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
@@ -85,9 +84,30 @@ class BooleanAtom(Boolean):
     Base class of BooleanTrue and BooleanFalse.
     """
     is_Boolean = True
+    _op_priority = 11  # higher than Expr
+
     @property
     def canonical(self):
         return self
+
+    def _noop(self, other=None):
+        raise TypeError('BooleanAtom not allowed in this context.')
+
+    __add__ = _noop
+    __radd__ = _noop
+    __sub__ = _noop
+    __rsub__ = _noop
+    __mul__ = _noop
+    __rmul__ = _noop
+    __pow__ = _noop
+    __rpow__ = _noop
+    __rdiv__ = _noop
+    __truediv__ = _noop
+    __div__ = _noop
+    __rtruediv__ = _noop
+    __mod__ = _noop
+    __rmod__ = _noop
+    _eval_power = _noop
 
 
 class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
@@ -514,7 +534,7 @@ class Not(BooleanFunction):
         (-oo, 0]
         """
         if len(self.free_symbols) == 1:
-            return self.args[0].as_set().complement
+            return self.args[0].as_set().complement(S.Reals)
         else:
             raise NotImplementedError("Sorry, Not.as_set has not yet been"
                                       " implemented for mutivariate"
@@ -909,10 +929,25 @@ class ITE(BooleanFunction):
             return c
         if b == c:
             return b
+        else:
+            if b == True and c == False:
+                return a
+            if b == False and c == True:
+                return Not(a)
 
     def to_nnf(self, simplify=True):
         a, b, c = self.args
         return And._to_nnf(Or(~a, b), Or(a, c), simplify=simplify)
+
+    def _eval_derivative(self, x):
+        return self.func(self.args[0], *[a.diff(x) for a in self.args[1:]])
+
+    # the diff method below is copied from Expr class
+    def diff(self, *symbols, **assumptions):
+        new_symbols = list(map(sympify, symbols))  # e.g. x, 2, y, z
+        assumptions.setdefault("evaluate", True)
+        return Derivative(self, *new_symbols, **assumptions)
+
 
 ### end class definitions. Some useful methods
 
@@ -926,9 +961,9 @@ def conjuncts(expr):
     >>> from sympy.logic.boolalg import conjuncts
     >>> from sympy.abc import A, B
     >>> conjuncts(A & B)
-    frozenset([A, B])
+    frozenset({A, B})
     >>> conjuncts(A | B)
-    frozenset([Or(A, B)])
+    frozenset({Or(A, B)})
 
     """
     return And.make_args(expr)
@@ -943,9 +978,9 @@ def disjuncts(expr):
     >>> from sympy.logic.boolalg import disjuncts
     >>> from sympy.abc import A, B
     >>> disjuncts(A | B)
-    frozenset([A, B])
+    frozenset({A, B})
     >>> disjuncts(A & B)
-    frozenset([And(A, B)])
+    frozenset({And(A, B)})
 
     """
     return Or.make_args(expr)
@@ -1278,20 +1313,6 @@ def is_literal(expr):
         return not isinstance(expr, BooleanFunction)
 
 
-@deprecated(
-    useinstead="sympify", issue=6550, deprecated_since_version="0.7.3")
-def compile_rule(s):
-    """
-    Transforms a rule into a SymPy expression
-    A rule is a string of the form "symbol1 & symbol2 | ..."
-
-    Note: This function is deprecated.  Use sympify() instead.
-
-    """
-    import re
-    return sympify(re.sub(r'([a-zA-Z_][a-zA-Z0-9_]*)', r'Symbol("\1")', s))
-
-
 def to_int_repr(clauses, symbols):
     """
     Takes clauses in CNF format and puts them into an integer representation.
@@ -1301,7 +1322,7 @@ def to_int_repr(clauses, symbols):
 
     >>> from sympy.logic.boolalg import to_int_repr
     >>> from sympy.abc import x, y
-    >>> to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]
+    >>> to_int_repr([x | y, y], [x, y]) == [{1, 2}, {2}]
     True
 
     """
@@ -1661,7 +1682,7 @@ def _find_predicates(expr):
 
     """
     if not isinstance(expr, BooleanFunction):
-        return set([expr])
+        return {expr}
     return set().union(*(_find_predicates(i) for i in expr.args))
 
 
@@ -1846,22 +1867,3 @@ def bool_map(bool1, bool2):
     if m:
         return a, m
     return m is not None
-
-
-@deprecated(
-    useinstead="bool_map", issue=7197, deprecated_since_version="0.7.4")
-def bool_equal(bool1, bool2, info=False):
-    """Return True if the two expressions represent the same logical
-    behaviour for some correspondence between the variables of each
-    (which may be different). For example, And(x, y) is logically
-    equivalent to And(a, b) for {x: a, y: b} (or vice versa). If the
-    mapping is desired, then set ``info`` to True and the simplified
-    form of the functions and mapping of variables will be returned.
-    """
-
-    mapping = bool_map(bool1, bool2)
-    if not mapping:
-        return False
-    if info:
-        return mapping
-    return True
