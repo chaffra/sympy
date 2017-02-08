@@ -85,24 +85,24 @@ from sympy.core import AtomicExpr
 class Unit(AtomicExpr):
     """
     Base class for base unit of physical units.
-
+ 
     >>> from sympy.physics.units import Unit
     >>> Unit("meter", "m")
     m
-
+ 
     Other units are derived from base units:
-
+ 
     >>> import sympy.physics.units as u
     >>> cm = u.m/100
     >>> 100*u.cm
     m
-
+ 
     """
     is_positive = True    # make sqrt(m**2) --> m
     is_commutative = True
-
+ 
     __slots__ = ["name", "abbrev"]
-
+ 
     def __new__(cls, name, abbrev, **assumptions):
         obj = AtomicExpr.__new__(cls, **assumptions)
         assert isinstance(name, str), repr(type(name))
@@ -110,19 +110,19 @@ class Unit(AtomicExpr):
         obj.name = name
         obj.abbrev = abbrev
         return obj
-
+ 
     def __getnewargs__(self):
         return (self.name, self.abbrev)
-
+ 
     def __eq__(self, other):
         return isinstance(other, Unit) and self.name == other.name
-
+ 
     def __hash__(self):
         return super(Unit, self).__hash__()
-
+ 
     def _hashable_content(self):
         return (self.name, self.abbrev)
-
+ 
     @property
     def free_symbols(self):
         return set()

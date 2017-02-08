@@ -89,6 +89,7 @@ def qsimplify(expr):
             q_args.append(arg.as_quantity)
         else:
             o_args.append(arg)
+            
 
     if isinstance(expr, Pow):
         return args[0].pow(args[1])
@@ -106,3 +107,7 @@ def qsimplify(expr):
         return reduce(redmul, o_args, quantities)
     else:
         return expr
+    
+def usimplify(expr):
+    expr = qsimplify(expr)
+    return getattr(expr,'as_unit',expr)

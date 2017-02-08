@@ -7,8 +7,10 @@ Unit system for physical quantities; include definition of constants.
 from __future__ import division
 import numbers
 
-from sympy import sympify, Expr, Number, Pow, Mul
+from sympy import sympify, Expr, Number, Pow, Mul, latex
+#from sympy.core.decorators import _sympifyit, call_highest_priority
 from .dimensions import Dimension, DimensionSystem
+#from operator import __truediv__
 
 
 class Unit(Expr):
@@ -36,9 +38,11 @@ class Unit(Expr):
     All operations (pow, mul, etc.) are defined as the corresponding ones
     acting on the factor (a number) and the dimension.
     """
-
+    
+    is_positive = True    # make sqrt(m**2) --> m
     is_commutative = True
     is_number = False
+    _op_priority = 10.0
 
     def __new__(cls, dim, abbrev="", factor=1, prefix=None, **assumptions):
         """
@@ -107,7 +111,8 @@ class Unit(Expr):
         """
 
         if self._abbrev == "":
-            return ""
+            #return ""
+            return self.abbrev_dim
         if self.prefix is not None:
             return self.prefix.abbrev + self._abbrev
         else:
@@ -128,7 +133,8 @@ class Unit(Expr):
             return self.abbrev_dim
 
     def __repr__(self):
-        return self.abbrev_dim
+        #return self.abbrev_dim
+        return self.abbrev
 
     def add(self, other):
         if not isinstance(other, Unit):
@@ -154,7 +160,12 @@ class Unit(Expr):
                 raise ValueError("Only dimension which are equal can be "
                                  "subtracted; '%s' and '%s' are different"
                                  % (self, other))
-
+    
+#     @_sympifyit('other', NotImplemented)
+#     @call_highest_priority('__rpow__')
+#     def __pow__(self, other):
+#         return self.pow(other)
+        
     def pow(self, other):
 
         other = sympify(other)
@@ -167,12 +178,18 @@ class Unit(Expr):
             else:
                 factor = (self.factor**other).evalf()
                 dim = self.dim.pow(other)
+                abbrev = latex(Pow(self, other))
                 if dim.is_dimensionless:
                     return factor
                 else:
-                    return Unit(dim, factor=factor)
+                    return Unit(dim, factor=factor, abbrev=abbrev)
         else:
             return Pow(self, other)
+        
+#     @_sympifyit('other', NotImplemented)
+#     @call_highest_priority('__rmul__')
+#     def __mul__(self, other):
+#         return self.mul(other)
 
     def mul(self, other):
         other = sympify(other)
@@ -185,7 +202,11 @@ class Unit(Expr):
             if dim.is_dimensionless:
                 return factor
             else:
-                return Unit(dim, factor=factor)
+                arg = Mul(self,other)
+                abbrev = latex(arg)
+                unit = Unit(dim, factor=factor, abbrev=abbrev)
+                #unit.args = [arg,]
+                return unit
         #TODO: what to do when other is a number? return a unit or a quantity?
         #      or nothing special?
         #elif isinstance(other, Number):
@@ -195,19 +216,28 @@ class Unit(Expr):
         #    return Unit(self.dim, factor=factor)
         else:
             return Mul(self, other)
-
+    
+#     @_sympifyit('other', NotImplemented)
+#     @call_highest_priority('__rdiv__')
+#     def __div__(self, other):
+#         return self.div(other)
+#     
+#     __truediv__ = __div__
+        
     def div(self, other):
+        
         other = sympify(other)
 
         if other == 1:
             return self
         elif isinstance(other, Unit):
             factor = self.factor / other.factor
+            abbrev = latex(Mul(self, Pow(other, -1)))
             dim = self.dim.div(other.dim)
             if dim.is_dimensionless:
                 return factor
             else:
-                return Unit(dim, factor=factor)
+                return Unit(dim, factor=factor, abbrev=abbrev)
         #TODO same remark as in __mul__
         #elif isinstance(other, Number):
         #    return Quantity(1/other, unit)
@@ -216,7 +246,14 @@ class Unit(Expr):
             #return Unit(self.dimension, factor=factor, system=system)
         else:
             return Mul(self, Pow(other, -1))
-
+    
+#     @_sympifyit('other', NotImplemented)
+#     @call_highest_priority('__div__')
+#     def __rdiv__(self, other):
+#         return self.rdiv(other)
+#     
+#     __rtruediv__ = __rdiv__
+    
     def rdiv(self, other):
 
         return self.pow(-1).mul(other)
@@ -254,7 +291,7 @@ class Unit(Expr):
         """
 
         from .quantities import Quantity
-        return Quantity(self.factor, Unit(self.dim))
+        return Quantity(self.factor, Unit(self.dim, abbrev=self.abbrev))
 
 
 class Constant(Unit):

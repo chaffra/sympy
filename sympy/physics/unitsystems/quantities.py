@@ -7,7 +7,8 @@ Physical quantities.
 from __future__ import division
 import numbers
 
-from sympy import sympify, Expr, Number, Mul, Pow
+from sympy import sympify, Expr, Number, Mul, Pow, Add
+from sympy.core.compatibility import reduce
 from .units import Unit
 
 #TODO: in operations, interpret a Unit as a quantity with factor 1
@@ -35,6 +36,9 @@ class Quantity(Expr):
 
         #TODO: if factor is of the form "1 m", parse the factor and the unit
         if isinstance(factor, (Number, numbers.Real)):
+            unit = cls.qsimplify(unit)
+            if isinstance(unit, Quantity):
+                unit = unit.as_unit
             if not isinstance(unit, Unit):
                 raise TypeError("'unit' should be a Unit instance; %s found"
                                 % type(unit))
@@ -123,6 +127,10 @@ class Quantity(Expr):
             return Quantity(f.evalf(), self.unit.pow(other))
         else:
             return Pow(self, other)
+        
+    @property
+    def as_quantity(self):
+        return self
 
     @property
     def as_unit(self):
@@ -130,16 +138,79 @@ class Quantity(Expr):
         Convert the quantity to a unit.
         """
 
-        from .units import Unit
+        #from .units import Unit
         return Unit(self.unit, factor=self.factor)
 
     def convert_to(self, unit):
         """
         Convert the quantity to another (compatible) unit.
         """
+        
+        unit = self.qsimplify(unit)
+        if isinstance(unit, Quantity):
+            unit = unit.as_unit
 
         if self.unit.is_compatible(unit) is False:
             raise ValueError("Only compatible units can be converted; "
                                  "'%s' found" % unit.dim)
 
         return Quantity(self.factor * self.unit.factor / unit.factor, unit)
+    
+    @classmethod
+    def qsimplify(cls, expr):
+        """
+        Simplify expression by recursively evaluating the quantity arguments.
+
+        If units are encountered, as it can be when using Constant, they are
+        converted to quantity.
+        """
+
+        def redmul(x, y):
+            """
+            Function used to combine args in multiplications.
+
+            This is necessary because the previous computation was not commutative,
+            and Mul(3, u) was not simplified; but Mul(u, 3) was.
+            """
+            if isinstance(x, Quantity):
+                return x.mul(y)
+            elif isinstance(y, Quantity):
+                return y.mul(x)
+            else:
+                return x*y
+
+        args = []
+        for arg in expr.args:
+            arg = arg.evalf()
+            if isinstance(arg, (Mul, Pow, Add)):
+                arg = cls.qsimplify(arg)
+            args.append(arg)
+
+        q_args, o_args = [], []
+
+        for arg in args:
+            if isinstance(arg, Quantity):
+                q_args.append(arg)
+            elif isinstance(arg, Unit):
+                # replace unit by a quantity to make the simplification
+                q_args.append(arg.as_quantity)
+            else:
+                o_args.append(arg)
+            
+
+        if isinstance(expr, Pow):
+            return args[0].pow(args[1])
+        elif isinstance(expr, Add):
+            if q_args != []:
+                quantities = reduce(lambda x, y: x.add(y), q_args)
+            else:
+                quantities = []
+            return reduce(lambda x, y: x+y, o_args, quantities)
+        elif isinstance(expr, Mul):
+            if q_args != []:
+                quantities = reduce(lambda x, y: x.mul(y), q_args)
+            else:
+                quantities = []
+            return reduce(redmul, o_args, quantities)
+        else:
+            return expr

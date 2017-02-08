@@ -874,7 +874,8 @@ class MatplotlibBackend(BaseBackend):
         are_3D = [s.is_3D for s in self.parent._series]
         self.matplotlib = import_module('matplotlib',
             __import__kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
-            min_module_version='1.1.0', catch=(RuntimeError,))
+            #min_module_version='1.1.0', 
+            catch=(RuntimeError,))
         self.plt = self.matplotlib.pyplot
         self.cm = self.matplotlib.cm
         self.LineCollection = self.matplotlib.collections.LineCollection
@@ -883,7 +884,7 @@ class MatplotlibBackend(BaseBackend):
         elif not any(are_3D):
             self.fig = self.plt.figure()
             self.ax = self.fig.add_subplot(111)
-            self.ax.spines['left'].set_position('zero')
+            self.ax.spines['left'].set_position( ('axes', -0.5) )
             self.ax.spines['right'].set_color('none')
             self.ax.spines['bottom'].set_position('zero')
             self.ax.spines['top'].set_color('none')
@@ -1001,10 +1002,10 @@ class MatplotlibBackend(BaseBackend):
                 self.ax.spines['left'].set_position('center')
                 self.ax.spines['bottom'].set_position('center')
             elif val == 'auto':
-                xl, xh = self.ax.get_xlim()
-                yl, yh = self.ax.get_ylim()
-                pos_left = ('data', 0) if xl*xh <= 0 else 'center'
-                pos_bottom = ('data', 0) if yl*yh <= 0 else 'center'
+                #xl, xh = self.ax.get_xlim()
+                #yl, yh = self.ax.get_ylim()
+                pos_left = ('axes', 0.0) #('data', 0) if xl*xh <= 0 else 'center'
+                pos_bottom = ('axes', 0.0) #('data', 0) if yl*yh <= 0 else 'center'
                 self.ax.spines['left'].set_position(pos_left)
                 self.ax.spines['bottom'].set_position(pos_bottom)
             else:
@@ -1062,7 +1063,9 @@ class TextBackend(BaseBackend):
 
 class DefaultBackend(BaseBackend):
     def __new__(cls, parent):
-        matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+        #matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+        
+        matplotlib = import_module('matplotlib', catch=(RuntimeError,))
         if matplotlib:
             return MatplotlibBackend(parent)
         else:
