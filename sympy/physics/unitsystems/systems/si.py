@@ -10,10 +10,11 @@ from __future__ import division
 
 from sympy.physics.unitsystems.simplifiers import qsimplify, usimplify
 from sympy.physics.unitsystems import (Dimension, DimensionSystem, Unit,
-                                       Constant, UnitSystem)
+                                       Constant, UnitSystem, Quantity)
 from sympy import latex
 from sympy.physics.unitsystems.prefixes import PREFIXES, prefix_unit
 import sys
+import math
 
 # base dimensions
 length = Dimension(name="length", symbol="L", length=1)
@@ -63,9 +64,13 @@ eV = Unit(energy, factor=1.6021766208e-19*J.factor, abbrev="eV")
 # Newton constant
 G = Constant(usimplify(m**3*kg**-1*s**-2), factor=6.67384e-11, abbrev="G")
 # speed of light
-c = Constant(velocity, factor=299792458, abbrev="c")
+#c = Quantity(factor=299792458, unit=m/s, abbrev="c")
+
+c = Constant(usimplify(m/s), factor=299792458, abbrev="c")
 
 boltzmann = Constant(usimplify(J/K), factor=1.38064852e-23, abbrev='k_b')
+h = Constant(usimplify(J*s), factor=6.626070040e-34, abbrev='h')
+hbar = Constant(usimplify(h), factor=1.0/2.0/math.pi, abbrev=r'\hbar')
 
 units = [m, g, s, J, N, W, Pa, Hz, eV]
 all_units = []

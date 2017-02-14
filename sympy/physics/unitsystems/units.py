@@ -63,7 +63,8 @@ class Unit(Expr):
         if isinstance(dim, Unit):
             obj_factor = factor * dim.factor
             obj_dim = dim.dim
-            obj_abbrev = dim.abbrev
+            if not abbrev:
+                obj_abbrev = dim.abbrev
             #TODO: find a better handling when dim has already a prefix
             if dim.prefix is None and prefix is not None:
                 obj_prefix = prefix

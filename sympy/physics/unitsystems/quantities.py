@@ -23,7 +23,7 @@ class Quantity(Expr):
 
     is_commutative = True
 
-    def __new__(cls, factor=1, unit=None, **assumptions):
+    def __new__(cls, factor=1, unit=None, abbrev='', **assumptions):
 
         if not isinstance(factor, str):
             factor = sympify(factor)
@@ -47,13 +47,19 @@ class Quantity(Expr):
 
         obj = Expr.__new__(cls, factor, unit, **assumptions)
         obj.factor, obj.unit = factor, unit
+        obj._abbrev = abbrev
 
         return obj
 
     def __str__(self):
+        if self._abbrev:
+            return self._abbrev
+        
         return "%g %s" % (self.factor, self.unit)
 
     def __repr__(self):
+        if self._abbrev:
+            return self._abbrev
         return "%g %s" % (self.factor, repr(self.unit))
 
     def __neg__(self):

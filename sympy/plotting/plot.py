@@ -121,7 +121,7 @@ class Plot(object):
     - xscale : {'linear', 'log'}
     - yscale : {'linear', 'log'}
     - axis : bool
-    - axis_center : tuple of two floats or {'center', 'auto'}
+    - axis_center : tuple of two floats or {'default', 'center', 'auto'}
     - xlim : tuple of two floats
     - ylim : tuple of two floats
     - aspect_ratio : tuple of two floats or {'auto'}
@@ -165,7 +165,7 @@ class Plot(object):
         self.aspect_ratio = 'auto'
         self.xlim = None
         self.ylim = None
-        self.axis_center = 'auto'
+        self.axis_center = 'default'
         self.axis = True
         self.xscale = 'linear'
         self.yscale = 'linear'
@@ -884,19 +884,19 @@ class MatplotlibBackend(BaseBackend):
         elif not any(are_3D):
             self.fig = self.plt.figure()
             self.ax = self.fig.add_subplot(111)
-            self.ax.spines['left'].set_position( ('axes', -0.5) )
-            self.ax.spines['right'].set_color('none')
-            self.ax.spines['bottom'].set_position('zero')
-            self.ax.spines['top'].set_color('none')
-            self.ax.spines['left'].set_smart_bounds(True)
-            self.ax.spines['bottom'].set_smart_bounds(False)
-            self.ax.xaxis.set_ticks_position('bottom')
-            self.ax.yaxis.set_ticks_position('left')
+#             self.ax.spines['left'].set_position( ('axes', 0.0) )
+#             self.ax.spines['right'].set_color('none')
+#             self.ax.spines['bottom'].set_position(('axes', 0.0))
+#             self.ax.spines['top'].set_color('none')
+#             self.ax.spines['left'].set_smart_bounds(True)
+#             self.ax.spines['bottom'].set_smart_bounds(False)
+#             self.ax.xaxis.set_ticks_position('bottom')
+#             self.ax.yaxis.set_ticks_position('left')
         elif all(are_3D):
             ## mpl_toolkits.mplot3d is necessary for
             ##      projection='3d'
-            mpl_toolkits = import_module('mpl_toolkits',
-                                     __import__kwargs={'fromlist': ['mplot3d']})
+#             mpl_toolkits = import_module('mpl_toolkits',
+#                                      __import__kwargs={'fromlist': ['mplot3d']})
             self.fig = self.plt.figure()
             self.ax = self.fig.add_subplot(111, projection='3d')
 
@@ -1002,12 +1002,14 @@ class MatplotlibBackend(BaseBackend):
                 self.ax.spines['left'].set_position('center')
                 self.ax.spines['bottom'].set_position('center')
             elif val == 'auto':
-                #xl, xh = self.ax.get_xlim()
-                #yl, yh = self.ax.get_ylim()
-                pos_left = ('axes', 0.0) #('data', 0) if xl*xh <= 0 else 'center'
-                pos_bottom = ('axes', 0.0) #('data', 0) if yl*yh <= 0 else 'center'
+                xl, xh = self.ax.get_xlim()
+                yl, yh = self.ax.get_ylim()
+                pos_left = ('data', 0) if xl*xh <= 0 else 'center'
+                pos_bottom = ('data', 0) if yl*yh <= 0 else 'center'
                 self.ax.spines['left'].set_position(pos_left)
                 self.ax.spines['bottom'].set_position(pos_bottom)
+            elif val == 'default':
+                pass
             else:
                 self.ax.spines['left'].set_position(('data', val[0]))
                 self.ax.spines['bottom'].set_position(('data', val[1]))
@@ -1022,9 +1024,11 @@ class MatplotlibBackend(BaseBackend):
         if parent.title:
             self.ax.set_title(parent.title)
         if parent.xlabel:
-            self.ax.set_xlabel(parent.xlabel, position=(1, 0))
+            self.ax.set_xlabel(parent.xlabel, #position=(1, 0)
+                               )
         if parent.ylabel:
-            self.ax.set_ylabel(parent.ylabel, position=(0, 1))
+            self.ax.set_ylabel(parent.ylabel, #position=(0, 1)
+                               )
 
     def show(self):
         self.process_series()
