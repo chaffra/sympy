@@ -11,7 +11,7 @@ from sympy import sympify, Expr, Number, Pow, Mul, latex
 #from sympy.core.decorators import _sympifyit, call_highest_priority
 from .dimensions import Dimension, DimensionSystem
 #from operator import __truediv__
-
+from sympy.core.compatibility import reduce
 
 class Unit(Expr):
     """
@@ -63,6 +63,7 @@ class Unit(Expr):
         if isinstance(dim, Unit):
             obj_factor = factor * dim.factor
             obj_dim = dim.dim
+            obj_abbrev = dim.abbrev
             #TODO: find a better handling when dim has already a prefix
             if dim.prefix is None and prefix is not None:
                 obj_prefix = prefix
@@ -454,6 +455,26 @@ class UnitSystem(object):
                 res += "%s^%d " % (str(u), p)
 
         return "%g %s" % (factor, res.strip())
+    
+    def to_base_units(self, unit):
+        
+        factor = unit.factor
+        vec = self._system.dim_vector(unit.dim)
+        
+        res = []
+        for (u, p) in sorted(zip(self._base_units, vec), key=lambda x: x[1],
+                             reverse=True):
+            factor /= u.factor**p
+            if p == 0:
+                continue
+            elif p == 1:
+                res.append(u)
+            else:
+                res.append(u**p)
+                
+        return reduce(Mul,res)
+            
+        
 
     @property
     def dim(self):

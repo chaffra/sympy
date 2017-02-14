@@ -51,13 +51,13 @@ g = Unit(mass, abbrev="g")
 v = speed = Unit(velocity,abbrev=latex(m/s))
 a = Unit(acceleration)
 p = Unit(momentum)
-J = Unit(energy, factor=1.0, abbrev="J")
-N = Unit(force, factor=1.0, abbrev="N")
-W = Unit(power, factor=1.0, abbrev="W")
-Pa = Unit(pressure, factor=1.0, abbrev="Pa")
+J = Unit(energy, factor=10**3, abbrev="J")
+N = Unit(force, factor=10**3, abbrev="N")
+W = Unit(power, factor=10**3, abbrev="W")
+Pa = Unit(pressure, factor=10**3, abbrev="Pa")
 Hz = Unit(frequency, abbrev="Hz")
 
-eV = Unit(energy, factor=1.6021766208e-19, abbrev="eV")
+eV = Unit(energy, factor=1.6021766208e-19*J.factor, abbrev="eV")
 
 # constants
 # Newton constant
