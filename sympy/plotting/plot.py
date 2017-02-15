@@ -178,27 +178,28 @@ class Plot(object):
         self._series = []
         self._series.extend(args)
 
-        # The backend type. On every show() a new backend instance is created
-        # in self._backend which is tightly coupled to the Plot instance
-        # (thanks to the parent attribute of the backend).
-        self.backend = DefaultBackend
-
         # The keyword arguments should only contain options for the plot.
         for key, val in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, val)
+                
+        # The backend type. On every show() a new backend instance is created
+        # in self._backend which is tightly coupled to the Plot instance
+        # (thanks to the parent attribute of the backend).
+        #self.backend = DefaultBackend
+        self._backend = DefaultBackend(self)
 
     def show(self):
         # TODO move this to the backend (also for save)
-        if hasattr(self, '_backend'):
-            self._backend.close()
-        self._backend = self.backend(self)
+        #if hasattr(self, '_backend'):
+        #    self._backend.close()
+        #self._backend = self.backend(self)
         self._backend.show()
 
     def save(self, path):
-        if hasattr(self, '_backend'):
-            self._backend.close()
-        self._backend = self.backend(self)
+        #if hasattr(self, '_backend'):
+        #    self._backend.close()
+        #self._backend = self.backend(self)
         self._backend.save(path)
 
     def __str__(self):
@@ -1013,6 +1014,7 @@ class MatplotlibBackend(BaseBackend):
             else:
                 self.ax.spines['left'].set_position(('data', val[0]))
                 self.ax.spines['bottom'].set_position(('data', val[1]))
+        
         if not parent.axis:
             self.ax.set_axis_off()
         if parent.legend:
@@ -1029,6 +1031,7 @@ class MatplotlibBackend(BaseBackend):
         if parent.ylabel:
             self.ax.set_ylabel(parent.ylabel, #position=(0, 1)
                                )
+
 
     def show(self):
         self.process_series()
@@ -1293,7 +1296,7 @@ def plot(*args, **kwargs):
     kwargs.setdefault('xlabel', x.name)
     kwargs.setdefault('ylabel', 'f(%s)' % x.name)
     show = kwargs.pop('show', True)
-    series = []
+
     plot_expr = check_arguments(args, 1, 1)
     series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
 
