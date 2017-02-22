@@ -55,12 +55,12 @@ class Quantity(Expr):
         if self._abbrev:
             return self._abbrev
         
-        return "%g %s" % (self.factor, self.unit)
+        return "%g*%s" % (self.factor, self.unit)
 
     def __repr__(self):
         if self._abbrev:
             return self._abbrev
-        return "%g %s" % (self.factor, repr(self.unit))
+        return "%g*%s" % (self.factor, repr(self.unit))
 
     def __neg__(self):
         return Quantity(-self.factor, self.unit)

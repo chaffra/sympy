@@ -124,6 +124,7 @@ PREFIXES = {
     'c': Prefix('centi', 'c', -2),
     'm': Prefix('milli', 'm', -3),
     'µ': Prefix('micro', 'µ', -6),
+    'mu': Prefix('micro', 'mu', -6),
     'n': Prefix('nano', 'n', -9),
     'p': Prefix('pico', 'p', -12),
     'f': Prefix('femto', 'f', -15),
