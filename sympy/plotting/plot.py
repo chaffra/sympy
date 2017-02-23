@@ -63,8 +63,8 @@ def _arity(f):
     if sys.version_info < (3,):
         return len(inspect.getargspec(f)[0])
     else:
-       param = inspect.signature(f).parameters.values()
-       return len([p for p in param if p.kind == p.POSITIONAL_OR_KEYWORD])
+        param = inspect.signature(f).parameters.values()
+        return len([p for p in param if p.kind == p.POSITIONAL_OR_KEYWORD])
 
 
 class Plot(object):
@@ -952,7 +952,7 @@ class MatplotlibBackend(BaseBackend):
                 raise ValueError('The matplotlib backend supports only '
                                  'is_2Dline, is_3Dline, is_3Dsurface and '
                                  'is_contour objects.')
-
+            self.ax.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
             # Customise the collections with the corresponding per-series
             # options.
             if hasattr(s, 'label'):
