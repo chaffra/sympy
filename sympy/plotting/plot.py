@@ -952,7 +952,7 @@ class MatplotlibBackend(BaseBackend):
                 raise ValueError('The matplotlib backend supports only '
                                  'is_2Dline, is_3Dline, is_3Dsurface and '
                                  'is_contour objects.')
-            self.ax.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+            
             # Customise the collections with the corresponding per-series
             # options.
             if hasattr(s, 'label'):
@@ -1014,6 +1014,8 @@ class MatplotlibBackend(BaseBackend):
             else:
                 self.ax.spines['left'].set_position(('data', val[0]))
                 self.ax.spines['bottom'].set_position(('data', val[1]))
+                
+        self.ax.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
         
         if not parent.axis:
             self.ax.set_axis_off()

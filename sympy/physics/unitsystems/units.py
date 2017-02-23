@@ -189,7 +189,7 @@ class Unit(Expr):
             else:
                 factor = (self.factor**other).evalf()
                 dim = self.dim.pow(other)
-                abbrev = latex(Pow(self, other))
+                abbrev = latex(Pow(self.dim, other))
                 if dim.is_dimensionless:
                     return factor
                 else:
@@ -302,7 +302,9 @@ class Unit(Expr):
         """
 
         from .quantities import Quantity
-        return Quantity(self.factor, Unit(self.dim, abbrev=self.abbrev))
+        #return Quantity(self.factor, Unit(self.dim, abbrev=self.abbrev))
+        return Quantity(1.0, self, abbrev=self.abbrev)
+    
 
 
 class Constant(Unit):

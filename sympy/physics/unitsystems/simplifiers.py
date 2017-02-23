@@ -70,6 +70,7 @@ def qsimplify(expr):
         elif isinstance(y, Quantity):
             return y.mul(x)
         else:
+            print(x,y)
             return x*y
 
     args = []
@@ -92,7 +93,12 @@ def qsimplify(expr):
             
 
     if isinstance(expr, Pow):
-        return args[0].pow(args[1])
+        if isinstance(args[0], Quantity):
+            return args[0].pow(args[1])
+        elif isinstance(args[0], Unit):
+            return args[0].as_quantity.pow(args[1])
+        else:
+            return expr
     elif isinstance(expr, Add):
         if q_args != []:
             quantities = reduce(lambda x, y: x.add(y), q_args)
