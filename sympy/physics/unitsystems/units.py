@@ -130,13 +130,22 @@ class Unit(Expr):
 
     def __str__(self):
         if self.abbrev != "":
-            return self.abbrev
+            
+            factor = self.factor
+            if self.prefix:
+                factor = self.factor/self.prefix.factor
+                    
+            if factor != 1.0:
+                #return '{:g}'.format(float(self.factor)) + self.abbrev
+                return latex(factor)+self.abbrev.replace('mu','µ')
+            else:
+                return self.abbrev.replace('mu','µ')
         else:
             return self.abbrev_dim
 
     def __repr__(self):
         #return self.abbrev_dim
-        return self.abbrev
+        return self.abbrev #.replace('mu','µ')
 
     def add(self, other):
         if not isinstance(other, Unit):
@@ -307,7 +316,12 @@ class Constant(Unit):
 
     #TODO: to begin nothing more is needed, but we prepare a dedicated class
     #      for further developments
-    pass
+    
+    def __str__(self):
+        if self.abbrev != "":
+            return self.abbrev
+        else:
+            return self.abbrev_dim
 
 
 class UnitSystem(object):
