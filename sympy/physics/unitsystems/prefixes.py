@@ -81,7 +81,7 @@ class Prefix(object):
     __rtruediv__ = __rdiv__
 
 
-def prefix_unit(unit, prefixes):
+def prefix_unit(unit, prefixes, exclude=[]):
     """
     Return a list of all units formed by unit and the given prefixes.
 
@@ -102,6 +102,9 @@ def prefix_unit(unit, prefixes):
     prefixed_units = []
 
     for prefix in prefixes:
+        if prefix+unit.abbrev in exclude:
+            continue
+        
         prefixed_units.append(Unit(unit, abbrev=unit.abbrev,
                                    prefix=prefixes[prefix]))
 

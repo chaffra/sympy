@@ -93,6 +93,7 @@ class Dimension(Expr):
         # if so, remove them from the dict
         name = kwargs.pop('name', None)
         symbol = kwargs.pop('symbol', None)
+        symbol_expr = kwargs.pop('symbol_expr', None)
 
         # pairs of (dimension, power)
         pairs = []
@@ -140,6 +141,7 @@ class Dimension(Expr):
         new = Expr.__new__(cls, Dict(*pairs))
         new.name = name
         new.symbol = symbol
+        new.symbol_expr = symbol_expr
 
         new._dict = dict(pairs)
 

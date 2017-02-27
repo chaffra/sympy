@@ -45,26 +45,28 @@ si_dim = DimensionSystem(base=(length, mass, time, temperature, electric_current
 
 # base units
 m = Unit(length, abbrev="m")
-kg = Unit(mass, abbrev="g", prefix=PREFIXES["k"])
+kg = Unit(mass, abbrev="kg",
+          #prefix=PREFIXES["k"]
+          )
 s = Unit(time, abbrev="s")
 K = Unit(temperature,abbrev="K")
 A = Unit(electric_current, abbrev="A")
 
 # gram; used to define its prefixed units
-g = Unit(mass, abbrev="g")
+g = Unit(mass, factor=1e-3, abbrev="g")
 
 # derived units
 v = speed = Unit(velocity,abbrev=latex(m/s))
 a = Unit(acceleration)
 p = Unit(momentum)
-J = Unit(energy, factor=10**3, abbrev="J")
-N = Unit(force, factor=10**3, abbrev="N")
-W = Unit(usimplify(J/s), abbrev="W")
-Pa = Unit(pressure, factor=10**3, abbrev="Pa")
+J = Unit(energy, factor=1.0, abbrev="J")
+N = Unit(force, factor=1.0, abbrev="N")
+W = Unit(power, abbrev="W")
+Pa = Unit(pressure, factor=1.0, abbrev="Pa")
 Hz = Unit(frequency, abbrev="Hz")
 C = Unit(electric_charge, abbrev="C")
 
-V = Unit(usimplify(W/A), abbrev='V')
+V = Unit(W.dim.div(A.dim), abbrev='V')
 
 
 
@@ -89,7 +91,7 @@ qe = Constant(C, factor=1.60217733e-19, abbrev='q')
 
 eV = Unit(usimplify(qe*V), abbrev="eV")
 
-units = [m, g, s, J, N, W, Pa, Hz, eV, C, V]
+units = [m, g, s, A, K, J, N, W, Pa, Hz, eV, C, V]
 all_units = []
 
 # Prefixes of units like g, J, N etc get added using `prefix_unit`
@@ -97,12 +99,12 @@ all_units = []
 all_units.extend([g, J, N, W, Pa, Hz, eV, C, V])
 
 for u in units:
-    all_units.extend(prefix_unit(u, PREFIXES))
+    all_units.extend(prefix_unit(u, PREFIXES, exclude=['kg']))
 
 all_units.extend([v, a, p, G, c, boltzmann, h, hbar, qe])
 
 # unit system
-si = UnitSystem(base=(m, kg, s, K), units=all_units, name="SI")
+si = UnitSystem(base=(m, kg, s, A, K), units=all_units, name="SI")
 
 for unit in all_units:
     setattr(sys.modules[__name__], unit.__repr__(), unit)
