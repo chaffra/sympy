@@ -131,9 +131,11 @@ class Unit(Expr):
     def __str__(self):
         if self.abbrev != "":
             
-            factor = self.factor
-            if self.prefix:
-                factor = self.factor/self.prefix.factor
+            factor = 1.0 #self.factor
+            if self._abbrev == 'g':
+                factor = 1.0
+            elif self.prefix:
+                factor = factor/self.prefix.factor
                     
             if factor != 1.0:
                 #return '{:g}'.format(float(self.factor)) + self.abbrev
@@ -189,7 +191,7 @@ class Unit(Expr):
             else:
                 factor = (self.factor**other).evalf()
                 dim = self.dim.pow(other)
-                abbrev = latex(Pow(self.dim, other))
+                abbrev = '' #latex(Pow(self.dim, other).evalf())
                 if dim.is_dimensionless:
                     return factor
                 else:
@@ -243,7 +245,7 @@ class Unit(Expr):
             return self
         elif isinstance(other, Unit):
             factor = self.factor / other.factor
-            abbrev = latex(Mul(self, Pow(other, -1)))
+            abbrev = '' #latex(Mul(self, Pow(other, -1)))
             dim = self.dim.div(other.dim)
             if dim.is_dimensionless:
                 return factor

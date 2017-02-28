@@ -19,6 +19,8 @@ import numbers
 from sympy.core.compatibility import reduce
 from sympy.core.containers import Tuple, Dict
 from sympy import sympify, nsimplify, Number, Integer, Matrix, Expr
+from sympy import Pow, Symbol, Mul
+from sympy import latex
 
 
 class Dimension(Expr):
@@ -93,6 +95,7 @@ class Dimension(Expr):
         # if so, remove them from the dict
         name = kwargs.pop('name', None)
         symbol = kwargs.pop('symbol', None)
+        symbol_expr = kwargs.pop('symbol_expr', None)
 
         # pairs of (dimension, power)
         pairs = []
@@ -141,7 +144,22 @@ class Dimension(Expr):
         new.name = name
         new.symbol = symbol
 
+
         new._dict = dict(pairs)
+        
+        if symbol_expr is None:
+            new.symbol_expr = new
+        else:
+            new.symbol_expr = symbol_expr
+        
+#         if symbol is None:
+#             dims = []
+#             for dim, power in new._dict.items():
+#                 dims.append(Pow(Symbol(dim),power))
+#             symbol = reduce(Mul,dims)
+#              
+#             new.symbol = latex(symbol)
+            
 
         return new
 
@@ -202,6 +220,9 @@ class Dimension(Expr):
             return self.symbol
         elif self.name is not None:
             return self.name
+        elif self.symbol_expr is not None:
+            return latex(self.symbol_expr)
+        
         else:
             return repr(self)
 
@@ -244,7 +265,9 @@ class Dimension(Expr):
 
         other = sympify(other)
         if isinstance(other, (numbers.Real, Number)):
-            return Dimension([(x, y*other) for x, y in self.items()])
+            symbol_expr = Pow(self,other)
+            return Dimension([(x, y*other) for x, y in self.items()],
+                             symbol_expr=symbol_expr)
         else:
             raise TypeError("Dimensions can be exponentiated only with "
                             "numbers; '%s' is not valid" % type(other))
@@ -262,7 +285,7 @@ class Dimension(Expr):
                 d[key] += other[key]
             except KeyError:
                 d[key] = other[key]
-        d = Dimension(d)
+        d = Dimension(d, symbol_expr=Mul(self,other))
 
 
         return d
@@ -278,7 +301,7 @@ class Dimension(Expr):
                 d[key] -= other[key]
             except KeyError:
                 d[key] = -other[key]
-        d = Dimension(d)
+        d = Dimension(d, symbol_expr=Mul(self,Pow(other,-1)))
 
         return d
 

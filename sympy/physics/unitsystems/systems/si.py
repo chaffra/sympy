@@ -17,21 +17,21 @@ import sys
 import math
 
 # base dimensions
-length = Dimension(name="length", symbol="L", length=1)
-mass = Dimension(name="mass", symbol="M", mass=1)
-time = Dimension(name="time", symbol="T", time=1)
+length = Dimension(name="length", symbol="m", length=1)
+mass = Dimension(name="mass", symbol="kg", mass=1)
+time = Dimension(name="time", symbol="s", time=1)
 temperature = Dimension(name="temperature", symbol="K", temperature=1)
 electric_current = Dimension(name='electric_current', symbol="A", electric_current=1)
 
 # derived dimensions
-velocity = Dimension(name="velocity", length=1, time=-1)
+velocity = Dimension(name="velocity", length=1, time=-1, symbol=latex(length/time))
 acceleration = Dimension(name="acceleration", length=1, time=-2)
 momentum = Dimension(name="momentum", mass=1, length=1, time=-1)
-force = Dimension(name="force", symbol="F", mass=1, length=1, time=-2)
-energy = Dimension(name="energy", symbol="E", mass=1, length=2, time=-2)
-power = Dimension(name="power", length=2, mass=1, time=-3)
-pressure = Dimension(name="pressure", mass=1, length=-1, time=-2)
-frequency = Dimension(name="frequency", symbol="f", time=-1)
+force = Dimension(name="force", symbol="N", mass=1, length=1, time=-2)
+energy = Dimension(name="energy", symbol="J", mass=1, length=2, time=-2)
+power = Dimension(name="power", length=2, mass=1, time=-3, symbol='W')
+pressure = Dimension(name="pressure", mass=1, length=-1, time=-2, symbol='Pa')
+frequency = Dimension(name="frequency", symbol="Hz", time=-1)
 action = Dimension(name="action", symbol="A", length=2, mass=1, time=-1)
 
 electric_charge = Dimension(name="electric_charge", symbol="C", time=1, electric_current=1)
@@ -45,22 +45,23 @@ si_dim = DimensionSystem(base=(length, mass, time, temperature, electric_current
 
 # base units
 m = Unit(length, abbrev="m")
-kg = Unit(mass, abbrev="g", prefix=PREFIXES["k"])
+kg = Unit(mass, abbrev="kg" #, prefix=PREFIXES["k"]
+          )
 s = Unit(time, abbrev="s")
 K = Unit(temperature,abbrev="K")
 A = Unit(electric_current, abbrev="A")
 
 # gram; used to define its prefixed units
-g = Unit(mass, abbrev="g")
+g = Unit(mass, factor=1e-3, abbrev="g")
 
 # derived units
 v = speed = Unit(velocity,abbrev=latex(m/s))
 a = Unit(acceleration)
 p = Unit(momentum)
-J = Unit(energy, factor=10**3, abbrev="J")
-N = Unit(force, factor=10**3, abbrev="N")
-W = Unit(usimplify(J/s), abbrev="W")
-Pa = Unit(pressure, factor=10**3, abbrev="Pa")
+J = Unit(energy, factor=1.0, abbrev='J')
+N = Unit(force, factor=1.0, abbrev="N")
+W = Unit(power, abbrev="W")
+Pa = Unit(pressure, factor=1.0, abbrev="Pa")
 Hz = Unit(frequency, abbrev="Hz")
 C = Unit(electric_charge, abbrev="C")
 
@@ -97,7 +98,7 @@ all_units = []
 all_units.extend([g, J, N, W, Pa, Hz, eV, C, V])
 
 for u in units:
-    all_units.extend(prefix_unit(u, PREFIXES))
+    all_units.extend(prefix_unit(u, PREFIXES, exclude=['kg']))
 
 all_units.extend([v, a, p, G, c, boltzmann, h, hbar, qe])
 
