@@ -143,6 +143,7 @@ class Dimension(Expr):
         new = Expr.__new__(cls, Dict(*pairs))
         new.name = name
         new.symbol = symbol
+        new.symbol_expr = symbol_expr
 
 
         new._dict = dict(pairs)
