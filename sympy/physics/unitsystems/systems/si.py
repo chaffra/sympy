@@ -67,6 +67,8 @@ C = Unit(electric_charge, abbrev="C")
 
 V = Unit(W.dim.div(A.dim), abbrev='V')
 
+F = Unit(usimplify(C/V), abbrev='F')
+
 
 
 # constants
@@ -88,7 +90,16 @@ hbar = Constant(usimplify(J*s), factor=h.factor/2.0/math.pi, abbrev=r'\hbar')
 
 qe = Constant(C, factor=1.60217733e-19, abbrev='q')
 
+#permeability of vacuum
+mu_0 = Constant(usimplify(N/A**2), factor=4e-7*math.pi, abbrev=r'\mu_0')
+
+#permittivity of vacuum
+eps_0 = Constant(usimplify(1/mu_0/c**2), abbrev=r'\epsilon_0')
+
 eV = Unit(usimplify(qe*V), abbrev="eV")
+
+#electron mass
+m_e = Unit(kg,factor=9.10938356e-31, abbrev=r'm_e')
 
 units = [m, g, s, A, K, J, N, W, Pa, Hz, eV, C, V]
 all_units = []
